@@ -6,12 +6,11 @@
     "build": "tsc",
     "dev": "node --loader ts-node/esm src/cli.ts"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": "dist/cli.js",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js"
-  },
+  "main": "dist/index.js",
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
