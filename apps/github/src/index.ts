@@ -4,6 +4,7 @@ import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-
 import z from 'zod'
 import { upload } from './upload.js'
 import { OAuthApp } from '@octokit/oauth-app'
+import cors from '@fastify/cors'
 
 const oauthApp = new OAuthApp({
   clientType: 'oauth-app',
@@ -13,12 +14,15 @@ const oauthApp = new OAuthApp({
 
 const server = Fastify()
 
+await server.register(cors)
+
 // Add schema validator and serializer
 server.setValidatorCompiler(validatorCompiler)
 server.setSerializerCompiler(serializerCompiler)
 
 // Define the response schema
 const GenerateOptionsSchema = z.object({
+  token: z.string(),
   name: z.string().optional(),
   language: z.enum(['javascript', 'typescript']).optional(),
   handle: z.boolean().optional(),
@@ -33,32 +37,39 @@ const GenerateOptionsSchema = z.object({
   zustand: z.boolean().optional(),
 })
 
-server.withTypeProvider<ZodTypeProvider>().get(
-  '/',
-  {
-    schema: {
-      querystring: z.object({
-        state: z.string(),
-        code: z.string(),
-      }),
+server
+  .withTypeProvider<ZodTypeProvider>()
+  .post(
+    '/repo',
+    {
+      schema: {
+        body: GenerateOptionsSchema,
+      },
     },
-  },
-  async (request, response) => {
-    const { code, state } = request.query
-    const { authentication } = await oauthApp.createToken({ code })
-    const parsedResult = GenerateOptionsSchema.safeParse(JSON.parse(atob(decodeURIComponent(state))))
-    if (parsedResult.success === false) {
-      return response.status(400).send({
-        error: 'Invalid request parameters',
-        details: parsedResult.error.format(),
-      })
-    }
-    const name = parsedResult.data.name ?? `react-three-${generateRandomName()}`
-    const files = generate({ name, ...parsedResult.data })
-    const url = await upload(name, files, authentication.token)
-    return response.redirect(url)
-  },
-)
+    async ({ body: { token, ...options } }, response) => {
+      const name = options.name ?? `react-three-${generateRandomName()}`
+      const files = generate({ name, ...options })
+      const url = await upload(name, files, token)
+      return { url }
+    },
+  )
+  .get(
+    '/oauth',
+    {
+      schema: {
+        querystring: z.object({
+          code: z.string(),
+        }),
+      },
+    },
+    async (request) => {
+      const { code } = request.query
+      const { authentication } = await oauthApp.createToken({ code })
+      return {
+        token: authentication.token,
+      }
+    },
+  )
 
 /**
  * Generates a random name in the format "adjective-noun"
