@@ -1,6 +1,11 @@
 import type { Generator } from '../index.js'
 
-export type GenerateZustandOptions = {}
+export type GenerateZustandOptions = {
+  /**
+   * @default true
+   */
+  addExample?: boolean
+}
 
 export function generateZustand(generator: Generator, options: GenerateZustandOptions | undefined) {
   if (options == null) {

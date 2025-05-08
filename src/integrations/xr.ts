@@ -1,10 +1,57 @@
 import type { Generator } from '../index.js'
 
-export type GenerateXrOptions = {}
+export type GenerateXrOptions = {
+  storeOptions?: any
+}
 
 export function generateXr(generator: Generator, options: GenerateXrOptions | undefined) {
   if (options == null) {
     return
   }
   generator.addDependency('@react-three/xr', '^6.6.16')
+  generator.inject('import', "import { XR, createXRStore } from '@react-three/xr'")
+  generator.inject(`global-start`, `const store = createXRStore(${JSON.stringify(options.storeOptions ?? {})})`)
+  generator.inject('scene-start', '<XR store={store}>')
+  generator.inject('scene-end', '</XR>')
+
+  generator.inject("vite-config-import", "import basicSsl from '@vitejs/plugin-basic-ssl'")
+  generator.configureVite({
+    server: {
+      host: true
+    },
+    plugins: ['$raw:basicSsl()'],
+  })
+
+  generator.inject(
+    'dom-start',
+    `<div style={{
+        display: "flex",
+          flexDirection: "row",
+          gap: "1rem",
+          position: 'absolute',
+          zIndex: 10000,
+          background: 'black',
+          borderRadius: '0.5rem',
+          border: 'none',
+          fontWeight: 'bold',
+          color: 'white',
+          cursor: 'pointer',
+          fontSize: '1.5rem',
+          bottom: '1rem',
+          left: '50%',
+          boxShadow: '0px 0px 20px rgba(0,0,0,1)',
+          transform: 'translate(-50%, 0)',
+        }}><button
+        style={{ padding: '1rem 2rem' }}
+        onClick={() => store.enterAR()}
+      >
+        Enter AR
+      </button>
+      <button
+        style={{ padding: '1rem 2rem' }}
+        onClick={() => store.enterVR()}
+      >
+        Enter VR
+      </button></div>`,
+  )
 }

@@ -68,6 +68,7 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
       message: 'Which integrations would you like to include?',
       choices: [
         { title: 'Drei', value: 'drei', selected: true },
+        { title: 'Handle', value: 'handle', selected: true },
         { title: 'Leva', value: 'leva', selected: true },
         { title: 'Postprocessing', value: 'postprocessing', selected: true },
         { title: 'Rapier', value: 'rapier', selected: true },
@@ -95,6 +96,7 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
     name,
     language: answers.language,
     drei: answers.integrations?.includes('drei') ? {} : undefined,
+    handle: answers.integrations?.includes('handle') ? {} : undefined,
     leva: answers.integrations?.includes('leva') ? {} : undefined,
     postprocessing: answers.integrations?.includes('postprocessing') ? {} : undefined,
     rapier: answers.integrations?.includes('rapier') ? {} : undefined,
@@ -111,6 +113,7 @@ interface CliOptions {
   js?: boolean
   ts?: boolean
   drei?: boolean
+  handle?: boolean
   leva?: boolean
   postprocessing?: boolean
   rapier?: boolean
@@ -131,6 +134,7 @@ async function main() {
     .option('--js', 'use javascript')
     .option('--ts', 'use typescript (default)')
     .option('--drei', 'add @react-three/drei')
+    .option('--handle', 'add @react-three/handle')
     .option('--leva', 'add leva')
     .option('--postprocessing', 'add @react-three/postprocessing')
     .option('--rapier', 'add @react-three/rapier')
@@ -151,6 +155,7 @@ async function main() {
           name,
           language: options.js ? 'javascript' : 'typescript',
           drei: options.drei ? {} : undefined,
+          handle: options.handle ? {} : undefined,
           leva: options.leva ? {} : undefined,
           postprocessing: options.postprocessing ? {} : undefined,
           rapier: options.rapier ? {} : undefined,

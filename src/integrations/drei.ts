@@ -7,4 +7,6 @@ export function generateDrei(generator: Generator, options: GenerateDreiOptions 
     return
   }
   generator.addDependency('@react-three/drei', '^10.0.0')
+  generator.inject("import", `import { Environment } from "@react-three/drei"`)
+  generator.inject("scene", "<Environment background />")
 }

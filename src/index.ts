@@ -1,5 +1,7 @@
 import { GitAttributes, HtmlContent, IndexContent } from './constants.js'
 import { GenerateDreiOptions, generateDrei } from './integrations/drei.js'
+import { generateFiber, GenerateFiberOptions } from './integrations/fiber.js'
+import { generateHandle, GenerateHandleOptions } from './integrations/handle.js'
 import { generateKoota, GenerateKootaOptions } from './integrations/koota.js'
 import { generateLeva, GenerateLevaOptions } from './integrations/leva.js'
 import { generateOffscreen, GenerateOffscreenOptions } from './integrations/offscreen.js'
@@ -8,10 +10,13 @@ import { generateRapier, GenerateRapierOptions } from './integrations/rapier.js'
 import { generateUikit, GenerateUikitOptions } from './integrations/uikit.js'
 import { generateXr, GenerateXrOptions } from './integrations/xr.js'
 import { generateZustand, GenerateZustandOptions } from './integrations/zustand.js'
+import { merge } from './merge.js'
 
 export type GenerateOptions = {
   name?: string
   language?: 'javascript' | 'typescript'
+  fiber?: GenerateFiberOptions
+  handle?: GenerateHandleOptions
   drei?: GenerateDreiOptions
   koota?: GenerateKootaOptions
   leva?: GenerateLevaOptions
@@ -38,6 +43,7 @@ export type File =
     }
 
 export type CodeInjectionLocation =
+  | 'vite-config-import'
   | 'import'
   | 'global-start'
   | 'global-end'
@@ -49,26 +55,31 @@ export type CodeInjectionLocation =
   | 'scene-end'
 
 export type Generator = {
+  get options(): GenerateOptions
   addDependency(name: string, semver: string): void
   addFile(path: string, file: File): void
   inject(location: CodeInjectionLocation, code: string): void
   replace(search: string, replace: string): void
+  configureVite(object: any): void
 }
 
 export function generate(options: GenerateOptions) {
+  //deep cloning since integrations might decide to modify the options
+  const clonedOptions = structuredClone(options)
   const files: Record<string, File> = {
-    ...options.files,
+    ...clonedOptions.files,
   }
-  const replacements: Array<{ search: string; replace: string }> = options.replacements ?? []
+  const replacements: Array<{ search: string; replace: string }> = clonedOptions.replacements ?? []
   const dependencies: Record<string, string> = {
     three: '~0.175.0',
     '@react-three/fiber': '^9.0.0',
     'react-dom': '^19.0.0',
     react: '^19.0.0',
     vite: '^6.3.4',
-    ...options.dependencies,
+    '@vitejs/plugin-react': '^4.4.1',
+    ...clonedOptions.dependencies,
   }
-  if (options.language === 'typescript') {
+  if (clonedOptions.language === 'typescript') {
     files['tsconfig.json'] = {
       type: 'text',
       content: JSON.stringify({
@@ -90,9 +101,17 @@ export function generate(options: GenerateOptions) {
     dependencies['@types/react'] = '^19.0.0'
   }
   const codeSnippets: Partial<Record<CodeInjectionLocation, Array<string>>> = {
-    import: [`import { Canvas } from "@react-three/fiber"`]
+    import: [`import { Canvas } from "@react-three/fiber"`],
+    'vite-config-import': ["import react from '@vitejs/plugin-react'"],
   }
+
+  let viteConfig = {
+    plugins: ['$raw:react()'],
+    resolve: { dedupe: ['three'] },
+  }
+
   const generator: Generator = {
+    options: clonedOptions,
     addDependency(name, semver) {
       const existingSemver = dependencies[name]
       if (existingSemver != null) {
@@ -114,26 +133,40 @@ export function generate(options: GenerateOptions) {
     replace(search, replace) {
       replacements.push({ search, replace })
     },
+    configureVite(config) {
+      viteConfig = merge(viteConfig, config)
+    },
   }
-  generateDrei(generator, options.drei)
-  generateKoota(generator, options.koota)
-  generateLeva(generator, options.leva)
-  generateOffscreen(generator, options.offscreen)
-  generatePostprocessing(generator, options.postprocessing)
-  generateRapier(generator, options.rapier)
-  generateUikit(generator, options.uikit)
-  generateXr(generator, options.xr)
-  generateZustand(generator, options.zustand)
+  generateDrei(generator, clonedOptions.drei)
+  generateHandle(generator, clonedOptions.handle)
+  generateKoota(generator, clonedOptions.koota)
+  generateLeva(generator, clonedOptions.leva)
+  generateOffscreen(generator, clonedOptions.offscreen)
+  generatePostprocessing(generator, clonedOptions.postprocessing)
+  generateRapier(generator, clonedOptions.rapier)
+  generateUikit(generator, clonedOptions.uikit)
+  generateXr(generator, clonedOptions.xr)
+  generateZustand(generator, clonedOptions.zustand)
+  generateFiber(generator, clonedOptions.fiber)
 
-  for (const { code, location } of options.injections ?? []) {
+  for (const { code, location } of clonedOptions.injections ?? []) {
     generator.inject(location, code)
   }
 
-  //TODO: add vite.config.js with react plugin
+  //TODO: add inject for README
   //TODO: add triplex recommendation
   //TODO: add option to setup workflow for publishing to github pages
 
-  const name = options.name ?? 'react-three-app'
+  const name = clonedOptions.name ?? 'react-three-app'
+
+  files['vite.config.js'] = {
+    type: 'text',
+    content: [
+      `import { defineConfig } from 'vite'`,
+      ...(codeSnippets['vite-config-import'] ?? []),
+      `export default defineConfig(${JSON.stringify(viteConfig).replace(/"\$raw:([^"]+)"/g, (_, raw) => raw)})`,
+    ].join('\n'),
+  }
 
   files['package.json'] = {
     type: 'text',
@@ -173,7 +206,7 @@ export function generate(options: GenerateOptions) {
   ].join('\n')
   const indexHtml = HtmlContent.replace(
     '$indexPath',
-    options.language === 'javascript' ? './src/index.jsx' : './src/index.tsx',
+    clonedOptions.language === 'javascript' ? './src/index.jsx' : './src/index.tsx',
   ).replace('$title', name)
 
   for (const { search, replace } of replacements) {
@@ -182,7 +215,7 @@ export function generate(options: GenerateOptions) {
   files[`src/app.tsx`] = { type: 'text', content: appCode }
   files[`index.html`] = { type: 'text', content: indexHtml }
 
-  if (options.language === 'javascript') {
+  if (clonedOptions.language === 'javascript') {
     //TODO: transpile tsx? to jsx? files}
   }
   //TODO: execute prettier on ts(x), js(x), and json files``
