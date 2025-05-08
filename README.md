@@ -21,3 +21,10 @@
 ```bash
 npm create @react-three
 ```
+
+TODO
+
+[ ] make cli build Readme with instructions for each integration
+[ ] turn into monorepo with react-three.org website and github repo server
+[ ] improve integrations
+[ ] auto install dependencies and start dev server and open url for cli (requires selecting the package manager)
