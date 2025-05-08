@@ -1,6 +1,6 @@
 import type { Generator } from '../index.js'
 
-export type GenerateUikitOptions = {}
+export type GenerateUikitOptions = {} | boolean
 
 export function generateUikit(generator: Generator, options: GenerateUikitOptions | undefined) {
   if (options == null) {

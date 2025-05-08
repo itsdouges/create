@@ -1,12 +1,17 @@
 import type { Generator } from '../index.js'
 
-export type GenerateXrOptions = {
-  storeOptions?: any
-}
+export type GenerateXrOptions =
+  | {
+      storeOptions?: any
+    }
+  | boolean
 
 export function generateXr(generator: Generator, options: GenerateXrOptions | undefined) {
-  if (options == null) {
+  if (options == null || options === false) {
     return
+  }
+  if (options === true) {
+    options = {}
   }
   generator.addDependency('@react-three/xr', '^6.6.16')
   generator.inject('import', "import { XR, createXRStore } from '@react-three/xr'")
@@ -14,10 +19,10 @@ export function generateXr(generator: Generator, options: GenerateXrOptions | un
   generator.inject('scene-start', '<XR store={store}>')
   generator.inject('scene-end', '</XR>')
 
-  generator.inject("vite-config-import", "import basicSsl from '@vitejs/plugin-basic-ssl'")
+  generator.inject('vite-config-import', "import basicSsl from '@vitejs/plugin-basic-ssl'")
   generator.configureVite({
     server: {
-      host: true
+      host: true,
     },
     plugins: ['$raw:basicSsl()'],
   })

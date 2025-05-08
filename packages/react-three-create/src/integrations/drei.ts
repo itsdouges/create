@@ -1,6 +1,6 @@
 import type { Generator } from '../index.js'
 
-export type GenerateDreiOptions = {}
+export type GenerateDreiOptions = {} | boolean
 
 export function generateDrei(generator: Generator, options: GenerateDreiOptions | undefined) {
   if (options == null) {

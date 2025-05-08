@@ -5,7 +5,7 @@ export type GenerateZustandOptions = {
    * @default true
    */
   addExample?: boolean
-}
+} | boolean
 
 export function generateZustand(generator: Generator, options: GenerateZustandOptions | undefined) {
   if (options == null) {

@@ -1,0 +1,75 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-react-three-org-website:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Build pruned github app
+        run: |
+          pnpm -F react-three-org-website... install
+          pnpm -F react-three-org-website... build
+        
+      
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: apps/react-three-org/dist
+          branch: gh-pages
+          clean: true
+
+  deploy-github-app:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Build pruned github app
+        run: |
+          pnpm -F github-app... install
+          pnpm -F github-app... build
+          echo "inject-workspace-packages=true" >> ./.npmrc
+          pnpm -F github-app... install --no-frozen-lockfile
+          pnpm -F github-app deploy --prod ./apps/github/pruned
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy github app
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

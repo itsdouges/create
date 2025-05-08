@@ -5,7 +5,7 @@ export type GenerateKootaOptions = {
    * @default true
    */
   addExample?: boolean
-}
+} | boolean
 
 export function generateKoota(generator: Generator, options: GenerateKootaOptions | undefined) {
   if (options == null) {

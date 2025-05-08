@@ -1,7 +1,7 @@
 import type { Generator } from '../index.js'
 import chalk from 'chalk'
 
-export type GenerateOffscreenOptions = {}
+export type GenerateOffscreenOptions = {} | boolean
 
 export function generateOffscreen(generator: Generator, options: GenerateOffscreenOptions | undefined) {
   if (options == null) {

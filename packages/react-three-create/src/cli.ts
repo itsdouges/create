@@ -181,7 +181,7 @@ async function main() {
         for (const filePath of filePaths) {
           const fullFilePath = join(basePath, filePath)
           await mkdir(dirname(fullFilePath), { recursive: true })
-          const file = files[filePath]
+          const file = files[filePath]!
 
           if (file.type === 'text') {
             await writeFile(fullFilePath, file.content)
