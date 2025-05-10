@@ -36,7 +36,7 @@ export async function upload(name: string, files: Record<string, File>, token: s
     }
   }
 
-  await init({ fs, dir: '/' })
+  await init({ fs, dir: '/', defaultBranch: 'main' })
 
   await add({ fs, dir: '/', filepath: filePaths })
 
