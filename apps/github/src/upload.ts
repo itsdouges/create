@@ -12,6 +12,7 @@ export async function upload(
   octokit: Octokit,
   name: string,
   username: string,
+  login: string,
   email: string,
   files: Record<string, File>,
   token: string,
@@ -25,7 +26,7 @@ export async function upload(
 
   await octokit.repos
     .updateInformationAboutPagesSite({
-      owner: username!,
+      owner: login,
       repo: name,
       build_type: 'workflow',
     })

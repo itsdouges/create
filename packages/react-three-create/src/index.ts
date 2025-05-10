@@ -115,9 +115,12 @@ export function generate(options: GenerateOptions) {
     'vite-config-import': ["import react from '@vitejs/plugin-react'"],
   }
 
+  const name = clonedOptions.name ?? 'react-three-app'
+
   let viteConfig = {
     plugins: ['$raw:react()'],
     resolve: { dedupe: ['three'] },
+    base: `/${name}`, //to work with the github pages config
   }
 
   const generator: Generator = {
@@ -164,11 +167,7 @@ export function generate(options: GenerateOptions) {
     generator.inject(location, code)
   }
 
-  //TODO: add inject for README
   //TODO: add triplex recommendation
-  //TODO: add option to setup workflow for publishing to github pages
-
-  const name = clonedOptions.name ?? 'react-three-app'
 
   files['vite.config.js'] = {
     type: 'text',

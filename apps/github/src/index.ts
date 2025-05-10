@@ -54,7 +54,7 @@ server
         data: { login, name: username, email },
       } = await octokit.users.getAuthenticated()
       const files = generate({ name, ...options, githubRepoName: name, githubUserName: login })
-      const url = await upload(octokit, name, username!, email!, files, token)
+      const url = await upload(octokit, name, username!, login, email!, files, token)
       return { url }
     },
   )
