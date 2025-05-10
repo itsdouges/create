@@ -21,7 +21,7 @@ export async function upload(octokit: Octokit, name: string, username: string, f
     owner: username!,
     repo: name,
     build_type: 'workflow',
-  })
+  }).catch(console.error)
 
   const filePaths = Object.keys(files).sort()
 
@@ -49,7 +49,7 @@ export async function upload(octokit: Octokit, name: string, username: string, f
     url: response.data.html_url,
     http,
     onAuth: () => ({ username: username!, password: token }),
-  })
+  }).catch(console.error)
 
   return response.data.html_url
 }
