@@ -120,6 +120,7 @@ function GithubRepo({ state }: { state: string }) {
     error: errorAccessToken,
     data: accessTokenData,
   } = useQuery({
+    retry: false,
     enabled: sessionAccessToken == null,
     queryKey: ['oauth', code],
     queryFn: async () => {
@@ -146,6 +147,7 @@ function GithubRepo({ state }: { state: string }) {
     isPending: isPendingRepo,
     error: repoError,
   } = useQuery({
+    retry: false,
     enabled: accessToken != null,
     queryKey: ['repo', accessToken],
     queryFn: async () => {
