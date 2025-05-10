@@ -8,18 +8,19 @@ import http from 'isomorphic-git/http/node/index.js'
 
 await configureSingle({ backend: InMemory })
 
-export async function upload(name: string, files: Record<string, File>, token: string) {
-  const octokit = new Octokit({ auth: token })
-
-  const {
-    data: { name: username, email },
-  } = await octokit.users.getAuthenticated()
+export async function upload(octokit: Octokit, name: string, username: string, files: Record<string, File>, token: string) {
 
   const response = await octokit.repos.createForAuthenticatedUser({
     name,
     description: 'react-three app created using react-three.org',
     private: false,
     auto_init: false,
+  })
+
+  await octokit.repos.updateInformationAboutPagesSite({
+    owner: username!,
+    repo: name,
+    build_type: 'workflow',
   })
 
   const filePaths = Object.keys(files).sort()
@@ -40,7 +41,7 @@ export async function upload(name: string, files: Record<string, File>, token: s
 
   await add({ fs, dir: '/', filepath: filePaths })
 
-  await commit({ fs, dir: '/', message: 'initial commit', author: { email: email!, name: username! } })
+  await commit({ fs, dir: '/', message: 'initial commit', author: { name: username! } })
 
   await push({
     fs,

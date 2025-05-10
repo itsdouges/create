@@ -5,6 +5,7 @@ import z from 'zod'
 import { upload } from './upload.js'
 import { OAuthApp } from '@octokit/oauth-app'
 import cors from '@fastify/cors'
+import { Octokit } from '@octokit/rest'
 
 const oauthApp = new OAuthApp({
   clientType: 'oauth-app',
@@ -46,10 +47,14 @@ server
         body: GenerateOptionsSchema,
       },
     },
-    async ({ body: { token, ...options } }, response) => {
+    async ({ body: { token, ...options } }) => {
       const name = options.name ?? `react-three-${generateRandomName()}`
-      const files = generate({ name, ...options })
-      const url = await upload(name, files, token)
+      const octokit = new Octokit({ auth: token })
+      const {
+        data: { login },
+      } = await octokit.users.getAuthenticated()
+      const files = generate({ name, ...options, githubRepoName: name, githubUserName: login })
+      const url = await upload(octokit, name, login, files, token)
       return { url }
     },
   )
