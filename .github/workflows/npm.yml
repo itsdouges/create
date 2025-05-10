@@ -1,9 +1,9 @@
-name: Deploy
+name: NPM
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*'
 
 jobs:
   deploy-react-three-create-package:
@@ -30,7 +30,7 @@ jobs:
 
       - uses: gittools/actions/gitversion/setup@v0
         with:
-          versionSpec: "5.x"
+          versionSpec: '5.x'
 
       - name: Install Dependencies
         run: pnpm install
@@ -39,7 +39,7 @@ jobs:
         run: |
           pnpm -r check:prettier
           pnpm -r check:eslint
-      
+
       - name: Build
         run: |
           pnpm -r build
@@ -59,4 +59,4 @@ jobs:
 
       - name: Deploy @react-three/create
         working-directory: ./packages/react-three-create
-        run: pnpm publish --access public --no-git-checks --tag ${{ steps.gitversion.outputs.preReleaseLabel == '' && 'latest' || steps.gitversion.outputs.preReleaseLabel }} 
+        run: pnpm publish --access public --no-git-checks --tag ${{ steps.gitversion.outputs.preReleaseLabel == '' && 'latest' || steps.gitversion.outputs.preReleaseLabel }}

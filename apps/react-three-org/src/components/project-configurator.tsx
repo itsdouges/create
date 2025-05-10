@@ -47,6 +47,7 @@ export function ProjectConfigurator({ selectedPackages, createGithubRepo }: Proj
                   options[selectedPackage] = true
                 }
                 const files = generate(options)
+                console.log(files)
                 const zip = new JSZip()
                 // Write each file into the zip
                 for (const [path, file] of Object.entries(files)) {

@@ -1,6 +1,7 @@
 import { GitAttributes, HtmlContent, IndexContent } from './constants.js'
 import { GenerateDreiOptions, generateDrei } from './integrations/drei.js'
 import { generateFiber, GenerateFiberOptions } from './integrations/fiber.js'
+import { generateGithubPages, GenerateGithubPagesOptions } from './integrations/github-pages.js'
 import { generateHandle, GenerateHandleOptions } from './integrations/handle.js'
 import { generateKoota, GenerateKootaOptions } from './integrations/koota.js'
 import { generateLeva, GenerateLevaOptions } from './integrations/leva.js'
@@ -13,6 +14,8 @@ import { generateZustand, GenerateZustandOptions } from './integrations/zustand.
 import { merge } from './merge.js'
 
 export type GenerateOptions = {
+  githubUserName?: string
+  githubRepoName?: string
   name?: string
   language?: 'javascript' | 'typescript'
   fiber?: GenerateFiberOptions
@@ -26,10 +29,13 @@ export type GenerateOptions = {
   uikit?: GenerateUikitOptions
   xr?: GenerateXrOptions
   zustand?: GenerateZustandOptions
+  githubPages?: GenerateGithubPagesOptions
   dependencies?: Record<string, string>
   files?: Record<string, File>
   injections?: Array<{ location: CodeInjectionLocation; code: string }>
   replacements?: Array<{ search: string; replace: string }>
+  packageManager?: string
+  skipSetup?: boolean
 }
 
 export type File =
@@ -53,6 +59,10 @@ export type CodeInjectionLocation =
   | 'scene-start'
   | 'scene'
   | 'scene-end'
+  | 'readme-start'
+  | 'readme-end'
+  | 'readme-libraries'
+  | 'readme-commands'
 
 export type Generator = {
   get options(): GenerateOptions
@@ -148,6 +158,7 @@ export function generate(options: GenerateOptions) {
   generateXr(generator, clonedOptions.xr)
   generateZustand(generator, clonedOptions.zustand)
   generateFiber(generator, clonedOptions.fiber)
+  generateGithubPages(generator, clonedOptions.githubPages)
 
   for (const { code, location } of clonedOptions.injections ?? []) {
     generator.inject(location, code)
@@ -183,6 +194,43 @@ export function generate(options: GenerateOptions) {
   files['.gitignore'] = { type: 'text', content: ['node_modules', 'dist'].join('\n') }
   files['.gitattributes'] = { type: 'text', content: GitAttributes }
   files[`src/index.tsx`] = { type: 'text', content: IndexContent }
+
+  const packageManager = options.packageManager ?? 'npm'
+  codeSnippets['readme-libraries'] ??= []
+  codeSnippets['readme-libraries'].unshift(
+    `[React](https://react.dev/) - A JavaScript library for building user interfaces`,
+    `[Three.js](https://threejs.org/) - JavaScript 3D library`,
+    `[@react-three/fiber](https://docs.pmnd.rs/react-three-fiber) - lets you create Three.js scenes using React components`,
+  )
+  codeSnippets['readme-commands'] ??= []
+  codeSnippets['readme-commands'].unshift(
+    `\`${packageManager} install\` to install the dependencies`,
+    `\`${packageManager} run dev\` to run the development server and preview the app with live updates`,
+    `\`${packageManager} run build\` to build the app into the \`dist\` folder`,
+  )
+  files[`README.md`] = {
+    type: 'text',
+    content: [
+      `# ${name}`,
+      `This project was generated with [react-three.org](https://react-three.org)`,
+      ...(codeSnippets['readme-start'] ?? []),
+      '\n',
+      `## Project Architecture`,
+      `This project uses [Vite](https://vitejs.dev/) as the bundler for fast development and optimized production builds.`,
+      `- \`app.tsx\` defines the main application component containing your 3D content`,
+      `- Modify the content inside the \`<Canvas>\` component to change what is visible on screen`,
+      `- Static assets can be placed in the \`public\` folder`,
+      '\n',
+      `## Libraries`,
+      `The following libraries are used - checkout the linked docs to learn more`,
+      ...(codeSnippets['readme-libraries'] ?? []).map((library) => `- ${library}`),
+      '\n',
+      `## Development Commands`,
+      ...(codeSnippets['readme-commands'] ?? []).map((command) => `- ${command}`),
+      '\n',
+      ...(codeSnippets['readme-end'] ?? []),
+    ].join('\n'),
+  }
 
   codeSnippets['dom-end']?.reverse()
   codeSnippets['global-end']?.reverse()

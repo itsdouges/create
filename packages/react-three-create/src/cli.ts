@@ -8,9 +8,22 @@ import prompts, { PromptObject } from 'prompts'
 import chalk from 'chalk'
 import ora from 'ora'
 import { fetch } from 'undici'
+import { spawn } from 'child_process'
+import open from 'open'
 
-process.on('SIGINT', () => process.exit(0))
-process.on('SIGTERM', () => process.exit(0))
+// Track child processes for cleanup
+const childProcesses = new Set<ReturnType<typeof spawn>>()
+
+// Kill all child processes on termination
+function cleanup() {
+  for (const child of childProcesses) {
+    child.kill()
+  }
+  process.exit(0)
+}
+
+process.on('SIGINT', cleanup)
+process.on('SIGTERM', cleanup)
 
 async function loadOptionsFromUrl(url: string): Promise<GenerateOptions> {
   const spinner = ora('Loading template from URL...').start()
@@ -52,6 +65,30 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
   }
 
   const questions = [
+    {
+      type: 'autocomplete',
+      name: 'packageManager' as const,
+      message: 'Which package manager would you like to use?',
+      choices: [
+        { title: 'npm', value: 'npm' },
+        { title: 'yarn', value: 'yarn' },
+        { title: 'pnpm', value: 'pnpm' },
+        { title: 'Other (custom)', value: 'custom' },
+      ],
+      initial: 0,
+    },
+    {
+      type: (prev) => (prev === 'custom' ? 'text' : null),
+      name: 'customPackageManager' as const,
+      message: 'Enter your package manager command:',
+      validate: (value: string) => (value.length > 0 ? true : 'Package manager command is required'),
+    },
+    {
+      type: 'confirm',
+      name: 'skipSetup' as const,
+      message: 'Skip automatic setup? (This will skip installing dependencies, starting the dev server, and opening the browser)',
+      initial: false,
+    },
     {
       type: 'select',
       name: 'language' as const,
@@ -105,6 +142,8 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
     offscreen: answers.integrations?.includes('offscreen') ? {} : undefined,
     zustand: answers.integrations?.includes('zustand') ? {} : undefined,
     koota: answers.integrations?.includes('koota') ? {} : undefined,
+    packageManager: answers.packageManager === 'custom' ? answers.customPackageManager : answers.packageManager,
+    skipSetup: answers.skipSetup,
   }
 }
 
@@ -122,6 +161,8 @@ interface CliOptions {
   offscreen?: boolean
   zustand?: boolean
   koota?: boolean
+  'package-manager'?: string
+  'skip-setup'?: boolean
   yes?: boolean
 }
 
@@ -143,6 +184,11 @@ async function main() {
     .option('--offscreen', 'add @react-three/offscreen')
     .option('--zustand', 'add zustand')
     .option('--koota', 'add koota')
+    .option('--package-manager <manager>', 'specify package manager (e.g. npm, yarn, pnpm)')
+    .option(
+      '--skip-setup',
+      'Skip automatically installing dependencies, starting the dev server, and opening the browser after project creation',
+    )
     .option('-y, --yes', 'Skip prompts and use default values')
     .action(async (name: string | undefined, options: CliOptions) => {
       let generateOptions: GenerateOptions
@@ -164,6 +210,8 @@ async function main() {
           offscreen: options.offscreen ? {} : undefined,
           zustand: options.zustand ? {} : undefined,
           koota: options.koota ? {} : undefined,
+          packageManager: options['package-manager'],
+          skipSetup: options['skip-setup'],
         }
       } else {
         generateOptions = await promptForOptions(name)
@@ -193,10 +241,74 @@ async function main() {
 
         spinner.succeed('Project created successfully!')
 
-        console.log(chalk.green('\nNext steps:'))
-        console.log(chalk.cyan(`  cd ${generateOptions.name}`))
-        console.log(chalk.cyan('  npm install'))
-        console.log(chalk.cyan('  npm run dev\n'))
+        if (generateOptions.skipSetup) {
+          console.log(chalk.green('\nNext steps:'))
+          console.log(chalk.cyan(`  cd ${generateOptions.name}`))
+          console.log(chalk.cyan(`  ${generateOptions.packageManager} install`))
+          console.log(chalk.cyan(`  ${generateOptions.packageManager} run dev\n`))
+        } else {
+          const spinner = ora('Installing dependencies...').start()
+          try {
+            // Change to project directory
+            process.chdir(basePath)
+
+            // Install dependencies based on package manager
+            const packageManager = generateOptions.packageManager || 'npm'
+            const installCmd = `${packageManager} install`
+
+            await new Promise((resolve, reject) => {
+              const child = spawn(installCmd, { shell: true, stdio: 'inherit' })
+              childProcesses.add(child)
+              child.on('close', (code: number) => {
+                childProcesses.delete(child)
+                code === 0 ? resolve(undefined) : reject(new Error(`Installation failed with code ${code}`))
+              })
+            })
+
+            spinner.succeed('Dependencies installed successfully!')
+
+            // Start dev server and open browser
+            const devCmd = `${packageManager} run dev`
+
+            console.log(chalk.green('\nStarting development server...'))
+
+            // Spawn the dev server and capture its output
+            const devProcess = spawn(devCmd, { shell: true })
+            childProcesses.add(devProcess)
+
+            // Listen for the server URL in the output
+            let serverUrl: string | undefined
+            devProcess.stdout?.on('data', (data: Buffer) => {
+              const output = data.toString()
+              // Look for the local URL in Vite's output
+              const urlMatch = output.match(/:\s+(https?:\/\/[^\s]+)/)
+              if (urlMatch && !serverUrl) {
+                serverUrl = urlMatch[1]!
+                // Open browser once we have the URL
+                open(serverUrl)
+              }
+              // Forward output to parent process
+              process.stdout.write(data)
+            })
+
+            devProcess.stderr?.on('data', (data: Buffer) => {
+              process.stderr.write(data)
+            })
+
+            // Handle process exit
+            devProcess.on('exit', (code: number) => {
+              childProcesses.delete(devProcess)
+              if (code !== 0) {
+                console.error(chalk.red(`Dev server exited with code ${code}`))
+                process.exit(code)
+              }
+            })
+          } catch (error) {
+            spinner.fail('Failed to install dependencies')
+            console.error(error)
+            process.exit(1)
+          }
+        }
       } catch (error) {
         spinner.fail('Failed to create project')
         console.error(error)

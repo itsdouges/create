@@ -12,4 +12,5 @@ export function generatePostprocessing(generator: Generator, options: GeneratePo
     return
   }
   generator.addDependency('@react-three/postprocessing', '^3.0.4')
+  generator.inject("readme-libraries", `[@react-three/postprocessing](https://react-postprocessing.docs.pmnd.rs/) - Post-processing effects for @react-three/fiber`,)
 }

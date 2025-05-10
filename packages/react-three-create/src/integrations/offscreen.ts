@@ -12,4 +12,5 @@ export function generateOffscreen(generator: Generator, options: GenerateOffscre
     return
   }
   generator.addDependency('@react-three/offscreen', '^0.0.8')
+  generator.inject("readme-libraries", `[@react-three/offscreen](https://github.com/pmndrs/offscreen) - Offload your scene to a worker thread for better performance`,)
 }

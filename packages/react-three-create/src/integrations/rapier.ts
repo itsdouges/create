@@ -7,4 +7,5 @@ export function generateRapier(generator: Generator, options: GenerateRapierOpti
     return
   }
   generator.addDependency('@react-three/rapier', '^2.1.0')
+  generator.inject("readme-libraries", `[@react-three/rapier](https://github.com/pmndrs/react-three-rapier) - Physics based on Rapier for your @react-three/fiber scene`,)
 }
