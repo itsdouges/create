@@ -51,10 +51,10 @@ server
       const name = options.name ?? `react-three-${generateRandomName()}`
       const octokit = new Octokit({ auth: token })
       const {
-        data: { login },
+        data: { login, name: username, email },
       } = await octokit.users.getAuthenticated()
       const files = generate({ name, ...options, githubRepoName: name, githubUserName: login })
-      const url = await upload(octokit, name, login, files, token)
+      const url = await upload(octokit, name, username!, email!, files, token)
       return { url }
     },
   )

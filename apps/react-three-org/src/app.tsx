@@ -173,7 +173,7 @@ function GithubRepo({ state }: { state: string }) {
   if (code == null) {
     location.href = `https://github.com/login/oauth/authorize?client_id=${
       import.meta.env.VITE_CLIENT_ID
-    }&redirect_uri=${import.meta.env.VITE_REDIRECT_URL}&state=${state}&scope=repo%20workflow`
+    }&redirect_uri=${import.meta.env.VITE_REDIRECT_URL}&state=${state}&scope=user%20repo%20workflow`
     return null
   }
   if (sessionAccessToken == null && isPendingAccessToken) {
