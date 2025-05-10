@@ -1,0 +1,83 @@
+export interface Package {
+  id: string
+  name: string
+  description: string
+  githubUrl: string
+  docsUrl: string
+}
+export const packages: Package[] = [
+  {
+    id: "drei",
+    name: "react-three/drei",
+    description:
+      "A growing collection of useful helpers and fully functional, ready-made abstractions for @react-three/fiber.",
+    githubUrl: "https://github.com/pmndrs/drei",
+    docsUrl: "https://docs.pmnd.rs/drei",
+  },
+  {
+    id: "handle",
+    name: "react-three/handle",
+    description:
+      "A cross-platform handle system for react-three-fiber. Create interactive controls and handles for your 3D objects.",
+    githubUrl: "https://github.com/pmndrs/handle",
+    docsUrl: "https://github.com/pmndrs/handle",
+  },
+  {
+    id: "koota",
+    name: "koota",
+    description:
+      "An ECS-based state management library optimized for real-time apps, games, and XR experiences.",
+    githubUrl: "https://github.com/pmndrs/koota",
+    docsUrl: "https://github.com/pmndrs/koota",
+  },
+  {
+    id: "leva",
+    name: "leva",
+    description: "A GUI panel for React. Create controls and debug your react-three-fiber scene with ease.",
+    githubUrl: "https://github.com/pmndrs/leva",
+    docsUrl: "https://github.com/pmndrs/leva",
+  },
+  {
+    id: "offscreen",
+    name: "react-three/offscreen",
+    description: "Offscreen rendering for react-three-fiber. Render your scene in a worker thread for better performance.",
+    githubUrl: "https://github.com/pmndrs/offscreen",
+    docsUrl: "https://github.com/pmndrs/offscreen",
+  },
+  {
+    id: "postprocessing",
+    name: "react-three/postprocessing",
+    description: "Post-processing effects for react-three-fiber, using react-postprocessing.",
+    githubUrl: "https://github.com/pmndrs/react-postprocessing",
+    docsUrl: "https://github.com/pmndrs/react-postprocessing",
+  },
+  {
+    id: "rapier",
+    name: "react-three/rapier",
+    description: "Physics based hooks for react-three-fiber using rapier.js.",
+    githubUrl: "https://github.com/pmndrs/use-rapier",
+    docsUrl: "https://github.com/pmndrs/use-rapier",
+  },
+  {
+    id: "uikit",
+    name: "react-three/uikit",
+    description: "UI components for react-three-fiber. Build interactive interfaces in 3D space.",
+    githubUrl: "https://github.com/pmndrs/uikit",
+    docsUrl: "https://github.com/pmndrs/uikit",
+  },
+  {
+    id: "xr",
+    name: "react-three/xr",
+    description:
+      "VR/AR support for react-three-fiber. Build cross-platform XR applications with React.",
+    githubUrl: "https://github.com/pmndrs/react-xr",
+    docsUrl: "https://github.com/pmndrs/react-xr",
+  },
+  {
+    id: "zustand",
+    name: "zustand",
+    description: "A small, fast and scalable state-management solution. Perfect for react-three-fiber applications.",
+    githubUrl: "https://github.com/pmndrs/zustand",
+    docsUrl: "https://github.com/pmndrs/zustand",
+  },
+]

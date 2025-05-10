@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loading } from './loading.js'
 import { useQuery } from '@tanstack/react-query'
+import { PackageCard } from '@/components/package-card'
+import { ProjectConfigurator } from '@/components/project-configurator'
+import { NavBar } from '@/components/nav-bar'
+import { packages } from '@/lib/packages'
+import { BackgroundAnimation } from '@/components/background-animation'
+import { Button } from './components/ui/button.js'
+import { CheckSquare, PackageIcon, X } from 'lucide-react'
+import { Toaster } from 'sonner'
 
 const searchParams = new URLSearchParams(location.search)
 
@@ -9,10 +17,100 @@ const sessionAccessToken = sessionStorage.getItem(sessionAccessTokenKey)
 
 export function App() {
   const [state, setState] = useState(() => searchParams.get('state'))
+  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
   if (state != null) {
     return <GithubRepo state={state} />
   }
-  return <button onClick={() => setState(btoa(JSON.stringify({})))}>Deploy to Github</button>
+
+  const togglePackage = (packageId: string) => {
+    setSelectedPackages((prev) =>
+      prev.includes(packageId) ? prev.filter((id) => id !== packageId) : [...prev, packageId],
+    )
+  }
+
+  return (
+    <main className="relative min-h-screen flex flex-col pb-36">
+      <BackgroundAnimation />
+      <div className="container mx-auto px-4 py-8 z-10 flex-1">
+        <div className="flex flex-col items-center justify-center mb-6 mt-8">
+          <h1 className="text-5xl md:text-7xl font-bold text-center mb-4 tracking-tighter">React Three</h1>
+          <p className="text-lg md:text-xl text-white/70 text-center max-w-2xl mb-6">
+            Building 3D experiences with the React Three Ecosystem
+          </p>
+          <NavBar />
+        </div>
+
+        {/* Visual separator using space instead of a border */}
+        <div className="mb-10 mt-8"></div>
+
+        <div className="flex flex-col mb-6">
+          <div className="flex justify-between items-center">
+            <p className="text-sm font-medium text-white/70 flex items-center">
+              <PackageIcon className="h-3.5 w-3.5 mr-1.5 opacity-70" />
+              Select packages to include in your project
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs hover:bg-white/5 flex items-center"
+              onClick={() => {
+                if (selectedPackages.length === packages.length) {
+                  setSelectedPackages([])
+                } else {
+                  setSelectedPackages(packages.map((pkg) => pkg.id))
+                }
+              }}
+              aria-label={selectedPackages.length === packages.length ? "Deselect all packages" : "Select all packages"}
+            >
+              {selectedPackages.length === packages.length ? (
+                <X className="h-3.5 w-3.5 mr-1 opacity-70" />
+              ) : (
+                <CheckSquare className="h-3.5 w-3.5 mr-1 opacity-70" />
+              )}
+              {selectedPackages.length === packages.length ? 'Deselect All' : 'Select All'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {packages.map((pkg) => (
+            <PackageCard
+              key={pkg.id}
+              package={pkg}
+              isSelected={selectedPackages.includes(pkg.id)}
+              onToggle={() => togglePackage(pkg.id)}
+            />
+          ))}
+        </div>
+
+        <ProjectConfigurator
+          createGithubRepo={() => {
+            const integrations: any = {}
+            for (const integration of selectedPackages) {
+              integrations[integration] = true
+            }
+            setState(btoa(JSON.stringify(integrations)))
+          }}
+          selectedPackages={selectedPackages}
+        />
+      </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(8px)',
+          },
+          className: 'font-sans',
+          duration: 3000,
+        }}
+        theme="dark"
+        richColors
+      />
+    </main>
+  )
 }
 
 function GithubRepo({ state }: { state: string }) {
@@ -77,16 +175,16 @@ function GithubRepo({ state }: { state: string }) {
     return null
   }
   if (sessionAccessToken == null && isPendingAccessToken) {
-    return <Loading text="loggin in" />
+    return <Loading text="Loggin In" />
   }
   if (errorAccessToken != null) {
     return errorAccessToken.message
   }
   if (isPendingRepo) {
-    return <Loading text="creating repository" />
+    return <Loading text="Creating Repository" />
   }
   if (repoError) {
     return repoError.message
   }
-  return <Loading text="forwarding to repository" />
+  return <Loading text="Forwarding to Repository" />
 }
