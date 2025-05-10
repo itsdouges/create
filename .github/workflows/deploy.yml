@@ -6,57 +6,74 @@ on:
       - main
 
 jobs:
-  deploy-react-three-create-package:
-    runs-on: ubuntu-latest
+  deploy-react-three-org-website:
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
-      packages: write
+      pages: write
+      id-token: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
 
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: latest
           run_install: false
 
-      - uses: gittools/actions/gitversion/setup@v0
+      - name: Build pruned github app
+        run: |
+          pnpm -F react-three-org-website... install
+          pnpm -F react-three-org-website... build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          versionSpec: "5.x"
+          path: apps/react-three-org/dist
 
-      - name: Install Dependencies
-        run: pnpm install
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-      - name: Check
+  deploy-github-app:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      - name: Build pruned github app
         run: |
-          pnpm -r check:prettier
-          pnpm -r check:eslint
-      
-      - name: Build
-        run: |
-          pnpm -r build
+          pnpm -F github-app... install
+          pnpm -F github-app... build
+          echo "inject-workspace-packages=true" >> ./.npmrc
+          pnpm -F github-app... install --no-frozen-lockfile
+          pnpm -F github-app deploy --prod ./apps/github/pruned
 
-      - name: Copy README
-        run: cp ./README.md packages/react-three-create
+      - uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Gitversion
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v0
-
-      - name: Set Version
-        run: pnpm -r exec json -f "package.json" -I -e 'this.version = "${{ steps.gitversion.outputs.fullSemVer }}"'
-
-      - name: Set publishing config
-        run: pnpm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-
-      - name: Deploy @react-three/create
-        working-directory: ./packages/react-three-create
-        run: pnpm publish --access public --no-git-checks --tag ${{ steps.gitversion.outputs.preReleaseLabel == '' && 'latest' || steps.gitversion.outputs.preReleaseLabel }} 
+      - name: Deploy github app
+        working-directory: ./apps/github
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
