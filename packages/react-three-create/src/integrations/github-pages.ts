@@ -6,7 +6,7 @@ export function generateGithubPages(generator: Generator, options: GenerateGithu
   if (options === false || (generator.options.packageManager ?? 'npm') != 'npm') {
     return
   }
-  generator.addFile('/.github/workflows/gh-pages.yml', {
+  generator.addFile('.github/workflows/gh-pages.yml', {
     type: 'text',
     content: `name: Deploy to Github Pages
 
