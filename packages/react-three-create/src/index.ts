@@ -63,6 +63,7 @@ export type CodeInjectionLocation =
   | 'readme-end'
   | 'readme-libraries'
   | 'readme-commands'
+  | 'vscode-extension-suggestion'
 
 export type Generator = {
   get options(): GenerateOptions
@@ -113,6 +114,7 @@ export function generate(options: GenerateOptions) {
   const codeSnippets: Partial<Record<CodeInjectionLocation, Array<string>>> = {
     import: [`import { Canvas } from "@react-three/fiber"`],
     'vite-config-import': ["import react from '@vitejs/plugin-react'"],
+    'vscode-extension-suggestion': [],
   }
 
   const name = clonedOptions.name ?? 'react-three-app'
@@ -166,8 +168,6 @@ export function generate(options: GenerateOptions) {
   for (const { code, location } of clonedOptions.injections ?? []) {
     generator.inject(location, code)
   }
-
-  //TODO: add triplex recommendation
 
   files['vite.config.js'] = {
     type: 'text',
@@ -261,6 +261,19 @@ export function generate(options: GenerateOptions) {
   }
   files[`src/app.tsx`] = { type: 'text', content: appCode }
   files[`index.html`] = { type: 'text', content: indexHtml }
+
+  if (codeSnippets['vscode-extension-suggestion']?.length) {
+    files['.vscode/extensions.json'] = {
+      type: 'text',
+      content: JSON.stringify(
+        {
+          recommendations: codeSnippets['vscode-extension-suggestion'],
+        },
+        null,
+        2,
+      ),
+    }
+  }
 
   if (clonedOptions.language === 'javascript') {
     //TODO: transpile tsx? to jsx? files}
