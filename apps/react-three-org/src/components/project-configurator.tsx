@@ -12,7 +12,7 @@ interface ProjectConfiguratorProps {
 //TODO: improve loading visualization
 
 export function ProjectConfigurator({ selectedPackages, createGithubRepo }: ProjectConfiguratorProps) {
-  const command = `npm create @react-three ${selectedPackages.map((id) => `--${id}`).join(' ')}`
+  const command = `npm create @react-three ${selectedPackages.length > 0 ? "-- " : ""}${selectedPackages.map((id) => `--${id}`).join(' ')}`
 
   const copyToClipboard = async () => {
     try {
