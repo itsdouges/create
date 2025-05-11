@@ -25,7 +25,7 @@ export async function upload(
   })
 
   await octokit.repos
-    .updateInformationAboutPagesSite({
+    .createPagesSite({
       owner: login,
       repo: name,
       build_type: 'workflow',
