@@ -6,7 +6,7 @@ export interface Package {
   docsUrl: string
 }
 
-export const packages: Package[] = [
+export const packages = [
   {
     id: 'drei',
     name: 'react-three/drei',
@@ -80,9 +80,9 @@ export const packages: Package[] = [
     githubUrl: 'https://github.com/pmndrs/zustand',
     docsUrl: 'https://zustand.docs.pmnd.rs/',
   },
-]
+] as const satisfies Package[]
 
-export const tools: Package[] = [
+export const tools = [
   {
     id: 'triplex',
     name: 'Triplex',
@@ -90,4 +90,8 @@ export const tools: Package[] = [
     githubUrl: 'https://github.com/try-triplex/triplex',
     docsUrl: 'https://triplex.dev/docs/get-started',
   },
-]
+] as const satisfies Package[]
+
+export type ToolIDs = (typeof tools)[number]['id']
+
+export type PackageIDs = (typeof packages)[number]['id']

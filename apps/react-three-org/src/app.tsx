@@ -4,30 +4,23 @@ import { useQuery } from '@tanstack/react-query'
 import { PackageCard } from '@/components/package-card'
 import { ProjectConfigurator } from '@/components/project-configurator'
 import { NavBar } from '@/components/nav-bar'
-import { packages, tools } from '@/lib/packages'
+import { packages, tools, PackageIDs, ToolIDs } from '@/lib/packages'
 import { BackgroundAnimation } from '@/components/background-animation'
 import { CogIcon, PackageIcon } from 'lucide-react'
 import { Toaster } from 'sonner'
 import { SelectionSection } from './components/selection-section.js'
 
 const searchParams = new URLSearchParams(location.search)
-
 const sessionAccessTokenKey = 'access_token'
 const sessionAccessToken = sessionStorage.getItem(sessionAccessTokenKey)
 
 export function App() {
   const [state, setState] = useState(() => searchParams.get('state'))
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([])
-  const [selectedTools, setSelectedTools] = useState<string[]>([])
+  const [selectedPackages, setSelectedPackages] = useState<PackageIDs[]>([])
+  const [selectedTools, setSelectedTools] = useState<ToolIDs[]>(['triplex'])
 
   if (state != null) {
     return <GithubRepo state={state} />
-  }
-
-  const togglePackage = (packageId: string) => {
-    setSelectedPackages((prev) =>
-      prev.includes(packageId) ? prev.filter((id) => id !== packageId) : [...prev, packageId],
-    )
   }
 
   return (
@@ -59,7 +52,11 @@ export function App() {
               key={pkg.id}
               package={pkg}
               isSelected={selectedPackages.includes(pkg.id)}
-              onToggle={() => togglePackage(pkg.id)}
+              onToggle={() => {
+                setSelectedPackages((prev) =>
+                  prev.includes(pkg.id) ? prev.filter((id) => id !== pkg.id) : [...prev, pkg.id],
+                )
+              }}
             />
           ))}
         </div>
