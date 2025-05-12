@@ -5,12 +5,14 @@ import JSZip from 'jszip'
 import { toast } from 'sonner'
 
 interface ProjectConfiguratorProps {
-  selectedPackages: string[]
+  selections: string[]
   createGithubRepo: () => void
 }
 
-export function ProjectConfigurator({ selectedPackages, createGithubRepo }: ProjectConfiguratorProps) {
-  const command = `npm create @react-three ${selectedPackages.length > 0 ? "-- " : ""}${selectedPackages.map((id) => `--${id}`).join(' ')}`
+export function ProjectConfigurator({ selections, createGithubRepo }: ProjectConfiguratorProps) {
+  const command = `npm create @react-three ${selections.length > 0 ? '-- ' : ''}${selections
+    .map((id) => `--${id}`)
+    .join(' ')}`
 
   const copyToClipboard = async () => {
     try {
@@ -41,7 +43,7 @@ export function ProjectConfigurator({ selectedPackages, createGithubRepo }: Proj
               onClick={async () => {
                 const element = document.createElement('a')
                 const options: any = {}
-                for (const selectedPackage of selectedPackages) {
+                for (const selectedPackage of selections) {
                   options[selectedPackage] = true
                 }
                 const files = generate(options)

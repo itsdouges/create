@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { PackageCard } from '@/components/package-card'
 import { ProjectConfigurator } from '@/components/project-configurator'
 import { NavBar } from '@/components/nav-bar'
-import { packages } from '@/lib/packages'
+import { packages, tools } from '@/lib/packages'
 import { BackgroundAnimation } from '@/components/background-animation'
 import { Button } from './components/ui/button.js'
-import { CheckSquare, PackageIcon, X } from 'lucide-react'
+import { CheckSquare, CogIcon, PackageIcon, X } from 'lucide-react'
 import { Toaster } from 'sonner'
+import { SelectionSection } from './components/install-bar.js'
 
 const searchParams = new URLSearchParams(location.search)
 
@@ -18,6 +19,8 @@ const sessionAccessToken = sessionStorage.getItem(sessionAccessTokenKey)
 export function App() {
   const [state, setState] = useState(() => searchParams.get('state'))
   const [selectedPackages, setSelectedPackages] = useState<string[]>([])
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
+
   if (state != null) {
     return <GithubRepo state={state} />
   }
@@ -43,34 +46,12 @@ export function App() {
         {/* Visual separator using space instead of a border */}
         <div className="mb-10 mt-8"></div>
 
-        <div className="flex flex-col mb-6">
-          <div className="flex justify-between items-center">
-            <p className="text-sm font-medium text-white/70 flex items-center">
-              <PackageIcon className="h-3.5 w-3.5 mr-1.5 opacity-70" />
-              Select packages to include in your project
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs hover:bg-white/5 flex items-center"
-              onClick={() => {
-                if (selectedPackages.length === packages.length) {
-                  setSelectedPackages([])
-                } else {
-                  setSelectedPackages(packages.map((pkg) => pkg.id))
-                }
-              }}
-              aria-label={selectedPackages.length === packages.length ? "Deselect all packages" : "Select all packages"}
-            >
-              {selectedPackages.length === packages.length ? (
-                <X className="h-3.5 w-3.5 mr-1 opacity-70" />
-              ) : (
-                <CheckSquare className="h-3.5 w-3.5 mr-1 opacity-70" />
-              )}
-              {selectedPackages.length === packages.length ? 'Deselect All' : 'Select All'}
-            </Button>
-          </div>
-        </div>
+        <SelectionSection
+          value={selectedPackages}
+          icon={PackageIcon}
+          onChange={setSelectedPackages}
+          options={packages}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {packages.map((pkg) => (
@@ -83,15 +64,37 @@ export function App() {
           ))}
         </div>
 
+        {/* Visual separator using space instead of a border */}
+        <div className="mb-10 mt-8"></div>
+
+        <SelectionSection value={selectedTools} icon={CogIcon} onChange={setSelectedTools} options={tools} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {tools.map((pkg) => (
+            <PackageCard
+              key={pkg.id}
+              package={pkg}
+              isSelected={selectedTools.includes(pkg.id)}
+              onToggle={() => {
+                setSelectedTools((prev) =>
+                  prev.includes(pkg.id) ? prev.filter((id) => id !== pkg.id) : [...prev, pkg.id],
+                )
+              }}
+            />
+          ))}
+        </div>
+
         <ProjectConfigurator
           createGithubRepo={() => {
             const integrations: any = {}
-            for (const integration of selectedPackages) {
+            const selections = [...selectedPackages, ...selectedTools]
+            for (const integration of selections) {
               integrations[integration] = true
             }
+
             setState(btoa(JSON.stringify(integrations)))
           }}
-          selectedPackages={selectedPackages}
+          selections={[...selectedPackages, ...selectedTools]}
         />
       </div>
       <Toaster
