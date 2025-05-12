@@ -64,6 +64,7 @@ export type CodeInjectionLocation =
   | 'readme-start'
   | 'readme-end'
   | 'readme-libraries'
+  | 'readme-tools'
   | 'readme-commands'
   | 'vscode-extension-suggestion'
 
@@ -116,7 +117,6 @@ export function generate(options: GenerateOptions) {
   const codeSnippets: Partial<Record<CodeInjectionLocation, Array<string>>> = {
     import: [`import { Canvas } from "@react-three/fiber"`],
     'vite-config-import': ["import react from '@vitejs/plugin-react'"],
-    'vscode-extension-suggestion': [],
   }
 
   const name = clonedOptions.name ?? 'react-three-app'
@@ -227,11 +227,15 @@ export function generate(options: GenerateOptions) {
       `The following libraries are used - checkout the linked docs to learn more`,
       ...(codeSnippets['readme-libraries'] ?? []).map((library) => `- ${library}`),
       '\n',
+      codeSnippets['readme-tools'] && `## Tools`,
+      ...(codeSnippets['readme-tools'] ?? []).map((tool) => `- ${tool}`),
+      codeSnippets['readme-tools'] && `\n`,
       `## Development Commands`,
       ...(codeSnippets['readme-commands'] ?? []).map((command) => `- ${command}`),
-      '\n',
       ...(codeSnippets['readme-end'] ?? []),
-    ].join('\n'),
+    ]
+      .filter(Boolean)
+      .join('\n'),
   }
 
   codeSnippets['dom-end']?.reverse()
