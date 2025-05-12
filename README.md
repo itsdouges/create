@@ -44,6 +44,7 @@ npm create @react-three
 | `--offscreen` | Add [@react-three/offscreen](https://github.com/pmndrs/offscreen) for offscreen rendering |
 | `--zustand` | Add [zustand](https://github.com/pmndrs/zustand) for state management |
 | `--koota` | Add [koota](https://github.com/pmndrs/koota) for animation |
+| `--triplex` | Add [Triplex](https://triplex.dev) for a visual development environment |
 | `--package-manager <manager>` | Specify package manager (npm, yarn, or pnpm) |
 | `--skip-setup` | Skip automatic dependency installation, dev server start, and browser opening |
 | `-y, --yes` | Skip prompts and use default values |
