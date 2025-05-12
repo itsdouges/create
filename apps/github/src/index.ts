@@ -35,6 +35,7 @@ const GenerateOptionsSchema = z.object({
   rapier: z.boolean().optional(),
   uikit: z.boolean().optional(),
   xr: z.boolean().optional(),
+  triplex: z.boolean().optional(),
   zustand: z.boolean().optional(),
 })
 
