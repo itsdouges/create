@@ -1,10 +1,12 @@
 import type { Generator } from '../index.js'
+import { unique } from '../lib/array.js'
 
 export type GenerateTriplexOptions = {} | boolean
 
 export type PropValue = {
-  declaredPropName: string
   declaredPropDefaultValue: unknown
+  declaredPropName: string
+  declaredPropType: string
   propName: string
   propValue: string
 }
@@ -13,13 +15,19 @@ export type ProviderDefinition = Record<
   string,
   | {
       component: string
-      type: 'wrapped'
+      type: 'wrapped-jsx'
       import: string
       props?: PropValue[]
     }
   | {
       code: string
-      type: 'inline'
+      type: 'inline-jsx'
+      import: string
+      props?: PropValue[]
+    }
+  | {
+      code: string
+      type: 'layout-effect'
       import: string
       props?: PropValue[]
     }
@@ -28,10 +36,26 @@ export type ProviderDefinition = Record<
 function generateProvidersModule(generator: Generator): string {
   const canvasProviders: (keyof typeof providerDefs)[] = []
   const globalProviders: (keyof typeof providerDefs)[] = []
-  const providerDefs = {
+  const providerDefs: ProviderDefinition = {
+    uikit: {
+      type: 'layout-effect',
+      props: [
+        {
+          declaredPropDefaultValue: '"light"',
+          declaredPropName: 'colorMode',
+          propName: 'colorMode',
+          propValue: 'colorMode',
+          declaredPropType: '"light" | "dark"',
+        },
+      ],
+      code: `
+        setPreferredColorScheme(colorMode);
+      `,
+      import: 'import { setPreferredColorScheme } from "@react-three/uikit"',
+    },
     rapier: {
       component: 'Physics',
-      type: 'wrapped',
+      type: 'wrapped-jsx',
       import: 'import { Physics } from "@react-three/rapier";',
       props: [
         {
@@ -39,17 +63,19 @@ function generateProvidersModule(generator: Generator): string {
           declaredPropName: 'physicsEnabled',
           propName: 'paused',
           propValue: '!physicsEnabled',
+          declaredPropType: 'boolean',
         },
         {
           declaredPropDefaultValue: true,
           declaredPropName: 'debugPhysics',
           propName: 'debug',
           propValue: 'debugPhysics',
+          declaredPropType: 'boolean',
         },
       ],
     },
     postprocessing: {
-      type: 'inline',
+      type: 'inline-jsx',
       code: `
         <EffectComposer enabled={postProcessingEnabled}>
           <DepthOfField
@@ -68,10 +94,11 @@ function generateProvidersModule(generator: Generator): string {
           declaredPropName: 'postProcessingEnabled',
           propName: 'enabled',
           propValue: 'postProcessingEnabled',
+          declaredPropType: 'boolean',
         },
       ],
     },
-  } satisfies ProviderDefinition
+  }
 
   if (!!generator.options.rapier) {
     canvasProviders.push('rapier')
@@ -81,23 +108,32 @@ function generateProvidersModule(generator: Generator): string {
     canvasProviders.push('postprocessing')
   }
 
+  if (!!generator.options.uikit) {
+    globalProviders.push('uikit')
+  }
+
   function generateProviderFunction(
     name: string,
     { jsdoc, providers }: { jsdoc: string; providers: (keyof typeof providerDefs)[] },
   ) {
-    const resolvedProviders = providers.map((provider) => providerDefs[provider])
-    const providerProps = resolvedProviders.flatMap((provider) => provider.props)
+    const resolvedProviders = providers.map((provider) => providerDefs[provider]!)
+    const providerProps = resolvedProviders.flatMap((provider) => provider.props || [])
     const providerImports = resolvedProviders.flatMap((provider) => provider.import)
-    const wrappedComponents = resolvedProviders.filter((provider) => provider.type === 'wrapped')
-    const inlineComponents = resolvedProviders.filter((provider) => provider.type === 'inline')
+    const wrappedComponents = resolvedProviders.filter((provider) => provider.type === 'wrapped-jsx')
+    const inlineComponents = resolvedProviders.filter((provider) => provider.type === 'inline-jsx')
+    const layoutEffects = resolvedProviders.filter((provider) => provider.type === 'layout-effect')
     const declaredProps = providerProps
       .map((prop) => `${prop.declaredPropName} = ${prop.declaredPropDefaultValue}`)
       .join(', ')
-    const declaredTypes = providerProps
-      .map((prop) => `${prop.declaredPropName}?: ${typeof prop.declaredPropDefaultValue}`)
-      .join('; ')
+    const declaredTypes = providerProps.map((prop) => `${prop.declaredPropName}?: ${prop.declaredPropType}`).join('; ')
+    const reactImports: string[] = ['type ReactNode']
+
+    if (layoutEffects.length) {
+      reactImports.push('useLayoutEffect')
+    }
 
     return {
+      reactImports,
       imports: providerImports,
       code: `
       /**
@@ -106,12 +142,21 @@ ${jsdoc
   .map((line) => `       * ${line}`)
   .join('\n')}
        */
-      export function ${name}({ children, ${declaredProps} }: { children: React.ReactNode; ${declaredTypes} }) {
+      export function ${name}({ children, ${declaredProps} }: { children: ReactNode; ${declaredTypes} }) {
+        ${
+          layoutEffects.length
+            ? `
+          useLayoutEffect(() => {
+            ${layoutEffects.map((effect) => effect.code).join('\n')}
+          }, [${layoutEffects.map((effect) => effect.props?.[0]?.propValue)}]);
+        `
+            : ''
+        }
         return (
           <>
             ${inlineComponents.map((provider) => provider.code)}
             ${wrappedComponents.reduce((acc, provider) => {
-              const props = provider.props.map((prop) => `${prop.propName}={${prop.propValue}}`).join(' ')
+              const props = provider.props?.map((prop) => `${prop.propName}={${prop.propValue}}`).join(' ')
               return `<${provider.component} ${props}>${acc}</${provider.component}>`
             }, '{children}')}
           </>
@@ -132,7 +177,8 @@ ${jsdoc
   })
 
   return `
-    ${global.imports.concat(canvas.imports).sort().join('\n')}
+    import { ${unique(global.reactImports, canvas.reactImports).sort().join(', ')} } from "react";
+    ${unique(global.imports, canvas.imports).sort().join('\n')}
     
     ${global.code}
     ${canvas.code}

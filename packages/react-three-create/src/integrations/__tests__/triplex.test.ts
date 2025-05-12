@@ -22,6 +22,7 @@ describe('triplex integration', () => {
         ".triplex/providers.tsx",
         {
           "content": "
+          import { type ReactNode } from "react";
           
           
           
@@ -32,7 +33,8 @@ describe('triplex integration', () => {
              * 
              * See: https://triplex.dev/docs/building-your-scene/providers#global-provider
              */
-            export function GlobalProvider({ children,  }: { children: React.ReactNode;  }) {
+            export function GlobalProvider({ children,  }: { children: ReactNode;  }) {
+              
               return (
                 <>
                   
@@ -48,7 +50,78 @@ describe('triplex integration', () => {
              * 
              * See: https://triplex.dev/docs/building-your-scene/providers#canvas-provider
              */
-            export function CanvasProvider({ children,  }: { children: React.ReactNode;  }) {
+            export function CanvasProvider({ children,  }: { children: ReactNode;  }) {
+              
+              return (
+                <>
+                  
+                  {children}
+                </>
+              );
+            }
+        ",
+          "type": "text",
+        },
+      ]
+    `)
+  })
+
+  it('should generate uikit color mode switcher', () => {
+    const addFile = vi.fn()
+
+    generateTriplex(
+      {
+        configureVite: vi.fn(),
+        options: { uikit: true },
+        replace: vi.fn(),
+        addDependency: vi.fn(),
+        addFile,
+        inject: vi.fn(),
+      },
+      {},
+    )
+
+    expect(addFile.mock.calls[0]).toMatchInlineSnapshot(`
+      [
+        ".triplex/providers.tsx",
+        {
+          "content": "
+          import { type ReactNode, useLayoutEffect } from "react";
+          import { setPreferredColorScheme } from "@react-three/uikit"
+          
+          
+            /**
+             * The global provider is rendered at the root of your application,
+             * use it to set up global configuration like themes.
+             * Props defined on this component appear as controls inside Triplex.
+             * 
+             * See: https://triplex.dev/docs/building-your-scene/providers#global-provider
+             */
+            export function GlobalProvider({ children, colorMode = "light" }: { children: ReactNode; colorMode?: "light" | "dark" }) {
+              
+                useLayoutEffect(() => {
+                  
+              setPreferredColorScheme(colorMode);
+            
+                }, [colorMode]);
+              
+              return (
+                <>
+                  
+                  {children}
+                </>
+              );
+            }
+          
+            /**
+             * The canvas provider is rendered as a child inside the React Three Fiber canvas,
+             * use it to set up canvas specific configuration like post-processing and physics.
+             * Props defined on this component appear as controls inside Triplex.
+             * 
+             * See: https://triplex.dev/docs/building-your-scene/providers#canvas-provider
+             */
+            export function CanvasProvider({ children,  }: { children: ReactNode;  }) {
+              
               return (
                 <>
                   
@@ -83,6 +156,7 @@ describe('triplex integration', () => {
         ".triplex/providers.tsx",
         {
           "content": "
+          import { type ReactNode } from "react";
           import { Bloom, DepthOfField, EffectComposer } from "@react-three/postprocessing";
       import { Physics } from "@react-three/rapier";
           
@@ -94,7 +168,8 @@ describe('triplex integration', () => {
              * 
              * See: https://triplex.dev/docs/building-your-scene/providers#global-provider
              */
-            export function GlobalProvider({ children,  }: { children: React.ReactNode;  }) {
+            export function GlobalProvider({ children,  }: { children: ReactNode;  }) {
+              
               return (
                 <>
                   
@@ -110,7 +185,8 @@ describe('triplex integration', () => {
              * 
              * See: https://triplex.dev/docs/building-your-scene/providers#canvas-provider
              */
-            export function CanvasProvider({ children, physicsEnabled = false, debugPhysics = true, postProcessingEnabled = true }: { children: React.ReactNode; physicsEnabled?: boolean; debugPhysics?: boolean; postProcessingEnabled?: boolean }) {
+            export function CanvasProvider({ children, physicsEnabled = false, debugPhysics = true, postProcessingEnabled = true }: { children: ReactNode; physicsEnabled?: boolean; debugPhysics?: boolean; postProcessingEnabled?: boolean }) {
+              
               return (
                 <>
                   
