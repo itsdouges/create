@@ -104,7 +104,7 @@ function generateProvidersModule(generator: Generator): string {
     canvasProviders.push('rapier')
   }
 
-  if (!!generator.options.postprocessing) {
+  if (!!generator.options.postprocessing && !generator.options.xr) {
     canvasProviders.push('postprocessing')
   }
 
