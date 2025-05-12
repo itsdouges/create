@@ -49,6 +49,7 @@ export function App() {
         <SelectionSection
           value={selectedPackages}
           icon={PackageIcon}
+          label="packages"
           onChange={setSelectedPackages}
           options={packages}
         />
@@ -67,7 +68,13 @@ export function App() {
         {/* Visual separator using space instead of a border */}
         <div className="mb-10 mt-8"></div>
 
-        <SelectionSection value={selectedTools} icon={CogIcon} onChange={setSelectedTools} options={tools} />
+        <SelectionSection
+          label="tools"
+          value={selectedTools}
+          icon={CogIcon}
+          onChange={setSelectedTools}
+          options={tools}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {tools.map((pkg) => (

@@ -8,9 +8,10 @@ interface SelectionSectionProps {
   options: Package[]
   value: string[]
   onChange: (value: string[]) => void
+  label: string
 }
 
-export function SelectionSection({ value, onChange, options, icon: Icon }: SelectionSectionProps) {
+export function SelectionSection({ label, value, onChange, options, icon: Icon }: SelectionSectionProps) {
   return (
     <div className="flex flex-col mb-6">
       <div className="flex justify-between items-center">
@@ -29,7 +30,7 @@ export function SelectionSection({ value, onChange, options, icon: Icon }: Selec
               onChange(options.map((pkg) => pkg.id))
             }
           }}
-          aria-label={value.length === options.length ? 'Deselect all tools' : 'Select all tools'}
+          aria-label={value.length === options.length ? `Deselect all ${label}` : `Select all ${label}`}
         >
           {value.length === options.length ? (
             <X className="h-3.5 w-3.5 mr-1 opacity-70" />
