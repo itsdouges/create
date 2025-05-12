@@ -17,7 +17,7 @@ export function SelectionSection({ label, value, onChange, options, icon: Icon }
       <div className="flex justify-between items-center">
         <p className="text-sm font-medium text-white/70 flex items-center">
           <Icon className="h-3.5 w-3.5 mr-1.5 opacity-70" />
-          Select tools to include in your project
+          Select {label} to include in your project
         </p>
         <Button
           variant="ghost"
