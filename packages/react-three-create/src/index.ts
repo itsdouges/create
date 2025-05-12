@@ -11,6 +11,7 @@ import { generateRapier, GenerateRapierOptions } from './integrations/rapier.js'
 import { generateUikit, GenerateUikitOptions } from './integrations/uikit.js'
 import { generateXr, GenerateXrOptions } from './integrations/xr.js'
 import { generateZustand, GenerateZustandOptions } from './integrations/zustand.js'
+import { generateTriplex, GenerateTriplexOptions } from './integrations/triplex.js'
 import { merge } from './merge.js'
 
 export type GenerateOptions = {
@@ -26,6 +27,7 @@ export type GenerateOptions = {
   offscreen?: GenerateOffscreenOptions
   postprocessing?: GeneratePostprocessingOptions
   rapier?: GenerateRapierOptions
+  triplex?: GenerateTriplexOptions
   uikit?: GenerateUikitOptions
   xr?: GenerateXrOptions
   zustand?: GenerateZustandOptions
@@ -164,6 +166,7 @@ export function generate(options: GenerateOptions) {
   generateZustand(generator, clonedOptions.zustand)
   generateFiber(generator, clonedOptions.fiber)
   generateGithubPages(generator, clonedOptions.githubPages)
+  generateTriplex(generator, clonedOptions.triplex)
 
   for (const { code, location } of clonedOptions.injections ?? []) {
     generator.inject(location, code)
