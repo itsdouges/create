@@ -6,10 +6,9 @@ import { ProjectConfigurator } from '@/components/project-configurator'
 import { NavBar } from '@/components/nav-bar'
 import { packages, tools } from '@/lib/packages'
 import { BackgroundAnimation } from '@/components/background-animation'
-import { Button } from './components/ui/button.js'
-import { CheckSquare, CogIcon, PackageIcon, X } from 'lucide-react'
+import { CogIcon, PackageIcon } from 'lucide-react'
 import { Toaster } from 'sonner'
-import { SelectionSection } from './components/install-bar.js'
+import { SelectionSection } from './components/selection-section.js'
 
 const searchParams = new URLSearchParams(location.search)
 
