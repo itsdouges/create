@@ -13,7 +13,7 @@ export type ProviderDefinition = Record<
   string,
   | {
       component: string
-      type: 'takes-children'
+      type: 'wrapped'
       import: string
       props?: PropValue[]
     }
@@ -31,7 +31,7 @@ function generateProvidersModule(generator: Generator): string {
   const providerDefs = {
     rapier: {
       component: 'Physics',
-      type: 'takes-children',
+      type: 'wrapped',
       import: 'import { Physics } from "@react-three/rapier";',
       props: [
         {
@@ -88,7 +88,7 @@ function generateProvidersModule(generator: Generator): string {
     const resolvedProviders = providers.map((provider) => providerDefs[provider])
     const providerProps = resolvedProviders.flatMap((provider) => provider.props)
     const providerImports = resolvedProviders.flatMap((provider) => provider.import)
-    const wrappedComponents = resolvedProviders.filter((provider) => provider.type === 'takes-children')
+    const wrappedComponents = resolvedProviders.filter((provider) => provider.type === 'wrapped')
     const inlineComponents = resolvedProviders.filter((provider) => provider.type === 'inline')
     const declaredProps = providerProps
       .map((prop) => `${prop.declaredPropName} = ${prop.declaredPropDefaultValue}`)
