@@ -193,7 +193,7 @@ export function generateTriplex(generator: Generator, options: GenerateTriplexOp
   generator.inject('vscode-extension-suggestion', 'trytriplex.triplex-vsce')
   generator.inject(
     'readme-tools',
-    `[Triplex](https://triplex.dev) - Your visual workspace for React / Three Fiber. Get started by installing [Triplex for VS Code](https://triplex.dev/docs/get-started/vscode). If you don't use Visual Studio Code download [Triplex Standalone](https://triplex.dev/docs/get-started/standalone).`,
+    `[Triplex](https://triplex.dev) - Your visual workspace for React / Three Fiber. Get started by installing [Triplex for VS Code](https://triplex.dev/docs/get-started/vscode). Don't use Visual Studio Code? Download [Triplex Standalone](https://triplex.dev/docs/get-started/standalone).`,
   )
 
   generator.addFile('.triplex/providers.tsx', {
