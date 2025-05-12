@@ -188,7 +188,7 @@ async function main() {
     .option('--offscreen', 'add @react-three/offscreen')
     .option('--zustand', 'add zustand')
     .option('--koota', 'add koota')
-    .option('--triplex', 'set up triplex environment')
+    .option('--triplex', 'set up triplex development environment')
     .option('--package-manager <manager>', 'specify package manager (e.g. npm, yarn, pnpm)')
     .option(
       '--skip-setup',
