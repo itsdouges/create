@@ -86,7 +86,8 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
     {
       type: 'confirm',
       name: 'skipSetup' as const,
-      message: 'Skip automatic setup? (This will skip installing dependencies, starting the dev server, and opening the browser)',
+      message:
+        'Skip automatic setup? (This will skip installing dependencies, starting the dev server, and opening the browser)',
       initial: false,
     },
     {
@@ -114,6 +115,7 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
         { title: 'Offscreen', value: 'offscreen', selected: true },
         { title: 'Zustand', value: 'zustand', selected: true },
         { title: 'Koota', value: 'koota', selected: true },
+        { title: 'Triplex', value: 'triplex', selected: true },
       ],
     },
   ] satisfies Array<PromptObject>
@@ -142,6 +144,7 @@ async function promptForOptions(name: string | undefined): Promise<GenerateOptio
     offscreen: answers.integrations?.includes('offscreen') ? {} : undefined,
     zustand: answers.integrations?.includes('zustand') ? {} : undefined,
     koota: answers.integrations?.includes('koota') ? {} : undefined,
+    triplex: answers.integrations?.includes('triplex') ? {} : undefined,
     packageManager: answers.packageManager === 'custom' ? answers.customPackageManager : answers.packageManager,
     skipSetup: answers.skipSetup,
   }
@@ -161,6 +164,7 @@ interface CliOptions {
   offscreen?: boolean
   zustand?: boolean
   koota?: boolean
+  triplex?: boolean
   'package-manager'?: string
   'skip-setup'?: boolean
   yes?: boolean
@@ -184,6 +188,7 @@ async function main() {
     .option('--offscreen', 'add @react-three/offscreen')
     .option('--zustand', 'add zustand')
     .option('--koota', 'add koota')
+    .option('--triplex', 'set up triplex development environment')
     .option('--package-manager <manager>', 'specify package manager (e.g. npm, yarn, pnpm)')
     .option(
       '--skip-setup',
@@ -210,6 +215,7 @@ async function main() {
           offscreen: options.offscreen ? {} : undefined,
           zustand: options.zustand ? {} : undefined,
           koota: options.koota ? {} : undefined,
+          triplex: options.triplex,
           packageManager: options['package-manager'],
           skipSetup: options['skip-setup'],
         }

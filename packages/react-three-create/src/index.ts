@@ -11,6 +11,7 @@ import { generateRapier, GenerateRapierOptions } from './integrations/rapier.js'
 import { generateUikit, GenerateUikitOptions } from './integrations/uikit.js'
 import { generateXr, GenerateXrOptions } from './integrations/xr.js'
 import { generateZustand, GenerateZustandOptions } from './integrations/zustand.js'
+import { generateTriplex, GenerateTriplexOptions } from './integrations/triplex.js'
 import { merge } from './merge.js'
 
 export type GenerateOptions = {
@@ -26,6 +27,7 @@ export type GenerateOptions = {
   offscreen?: GenerateOffscreenOptions
   postprocessing?: GeneratePostprocessingOptions
   rapier?: GenerateRapierOptions
+  triplex?: GenerateTriplexOptions
   uikit?: GenerateUikitOptions
   xr?: GenerateXrOptions
   zustand?: GenerateZustandOptions
@@ -62,7 +64,9 @@ export type CodeInjectionLocation =
   | 'readme-start'
   | 'readme-end'
   | 'readme-libraries'
+  | 'readme-tools'
   | 'readme-commands'
+  | 'vscode-extension-suggestion'
 
 export type Generator = {
   get options(): GenerateOptions
@@ -162,12 +166,11 @@ export function generate(options: GenerateOptions) {
   generateZustand(generator, clonedOptions.zustand)
   generateFiber(generator, clonedOptions.fiber)
   generateGithubPages(generator, clonedOptions.githubPages)
+  generateTriplex(generator, clonedOptions.triplex)
 
   for (const { code, location } of clonedOptions.injections ?? []) {
     generator.inject(location, code)
   }
-
-  //TODO: add triplex recommendation
 
   files['vite.config.js'] = {
     type: 'text',
@@ -224,11 +227,15 @@ export function generate(options: GenerateOptions) {
       `The following libraries are used - checkout the linked docs to learn more`,
       ...(codeSnippets['readme-libraries'] ?? []).map((library) => `- ${library}`),
       '\n',
+      codeSnippets['readme-tools'] && `## Tools`,
+      ...(codeSnippets['readme-tools'] ?? []).map((tool) => `- ${tool}`),
+      codeSnippets['readme-tools'] && `\n`,
       `## Development Commands`,
       ...(codeSnippets['readme-commands'] ?? []).map((command) => `- ${command}`),
-      '\n',
       ...(codeSnippets['readme-end'] ?? []),
-    ].join('\n'),
+    ]
+      .filter(Boolean)
+      .join('\n'),
   }
 
   codeSnippets['dom-end']?.reverse()
@@ -261,6 +268,19 @@ export function generate(options: GenerateOptions) {
   }
   files[`src/app.tsx`] = { type: 'text', content: appCode }
   files[`index.html`] = { type: 'text', content: indexHtml }
+
+  if (codeSnippets['vscode-extension-suggestion']?.length) {
+    files['.vscode/extensions.json'] = {
+      type: 'text',
+      content: JSON.stringify(
+        {
+          recommendations: codeSnippets['vscode-extension-suggestion'],
+        },
+        null,
+        2,
+      ),
+    }
+  }
 
   if (clonedOptions.language === 'javascript') {
     //TODO: transpile tsx? to jsx? files}
